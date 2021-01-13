@@ -462,7 +462,7 @@ mod tests {
 
         while let Some(message) = server.recv() {
             match message {
-                SocketEvent::Connect(_) => {}
+                SocketEvent::Connect(_) | SocketEvent::Metrics(_, _) => {}
                 SocketEvent::Packet(packet) => {
                     let byte = packet.payload()[0];
                     assert![!seen.contains(&byte)];
@@ -502,7 +502,7 @@ mod tests {
         let mut cnt = 0;
         while let Some(message) = server.recv() {
             match message {
-                SocketEvent::Connect(_) => {}
+                SocketEvent::Connect(_) | SocketEvent::Metrics(_, _) => {}
                 SocketEvent::Packet(_) => {
                     cnt += 1;
                 }
@@ -867,7 +867,7 @@ mod tests {
                         SocketEvent::Timeout(_) | SocketEvent::Disconnect(_) => {
                             panic!["Unable to time out, time has not advanced"]
                         }
-                        SocketEvent::Connect(_) => {}
+                        SocketEvent::Connect(_) | SocketEvent::Metrics(_, _) => {}
                     }
                 }
             }

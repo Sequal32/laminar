@@ -7,7 +7,7 @@ use crate::{
     error::{ErrorKind, PacketErrorKind, Result},
     infrastructure::{
         arranging::{Arranging, ArrangingSystem, OrderingSystem, SequencingSystem},
-        AcknowledgmentHandler, CongestionHandler, Fragmentation, SentPacket,
+        AcknowledgmentHandler, CongestionHandler, Fragmentation, SentPacket, Metrics, MetricsHandler
     },
     net::constants::{
         ACKED_PACKET_HEADER, DEFAULT_ORDERING_STREAM, DEFAULT_SEQUENCING_STREAM,
@@ -28,6 +28,8 @@ pub struct VirtualConnection {
     pub last_sent: Instant,
     /// The address of the remote endpoint
     pub remote_address: SocketAddr,
+    // Last time we sent metrics
+    pub last_metric: Instant,
 
     ever_sent: bool,
     ever_recv: bool,
@@ -36,6 +38,7 @@ pub struct VirtualConnection {
     sequencing_system: SequencingSystem<Box<[u8]>>,
     acknowledge_handler: AcknowledgmentHandler,
     congestion_handler: CongestionHandler,
+    metrics_handler: MetricsHandler,
 
     config: Config,
     fragmentation: Fragmentation,
@@ -47,6 +50,7 @@ impl VirtualConnection {
         VirtualConnection {
             last_heard: time,
             last_sent: time,
+            last_metric: time,
             remote_address: addr,
             ever_sent: false,
             ever_recv: false,
@@ -54,6 +58,7 @@ impl VirtualConnection {
             sequencing_system: SequencingSystem::new(),
             acknowledge_handler: AcknowledgmentHandler::new(),
             congestion_handler: CongestionHandler::new(config),
+            metrics_handler: MetricsHandler::new(),
             fragmentation: Fragmentation::new(config),
             config: config.to_owned(),
         }
@@ -99,6 +104,10 @@ impl VirtualConnection {
         time.duration_since(self.last_sent)
     }
 
+    pub fn get_metrics(&mut self) -> Metrics {
+        self.metrics_handler.calculate_output()
+    }
+
     /// Pre-processes the given buffer to be sent over the network.
     pub fn process_outgoing<'a>(
         &mut self,
@@ -107,6 +116,7 @@ impl VirtualConnection {
         time: Instant,
     ) -> Result<OutgoingPackets<'a>> {
         self.last_sent = time;
+        self.metrics_handler.record_sent_info(packet.payload.len());
         match packet.delivery {
             DeliveryGuarantee::Unreliable => {
                 if packet.payload.len() <= self.config.receive_buffer_max_size {
@@ -251,6 +261,7 @@ impl VirtualConnection {
         time: Instant,
     ) -> Result<IncomingPackets> {
         self.last_heard = time;
+        self.metrics_handler.record_receive_info(received_data.len());
 
         let mut packet_reader = PacketReader::new(received_data);
 
@@ -265,6 +276,7 @@ impl VirtualConnection {
             // we already updated our `self.last_heard` time, nothing else to be done.
             return Ok(IncomingPackets::zero());
         }
+
 
         match header.delivery_guarantee() {
             DeliveryGuarantee::Unreliable => {
@@ -429,7 +441,11 @@ impl VirtualConnection {
     ///
     /// Note that after requesting dropped packets the dropped packets will be removed from this client.
     pub fn gather_dropped_packets(&mut self) -> Vec<SentPacket> {
-        self.acknowledge_handler.dropped_packets()
+        let dropped = self.acknowledge_handler.dropped_packets();
+
+        self.metrics_handler.record_packet_loss(dropped.len());
+
+        dropped
     }
 }
 

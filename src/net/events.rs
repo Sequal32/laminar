@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
 
-use crate::packet::Packet;
+use crate::{infrastructure::Metrics, packet::Packet};
 
 /// Events that can occur in `laminar` and that will be pushed through the `event_receiver` returned by `Socket::bind`.
 #[derive(Debug, PartialEq)]
@@ -20,4 +20,6 @@ pub enum SocketEvent {
     Timeout(SocketAddr),
     /// The established connection to a client has timed out.
     Disconnect(SocketAddr),
+    /// Periodical metrics every second
+    Metrics(SocketAddr, Metrics),
 }
