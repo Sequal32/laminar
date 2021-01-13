@@ -1,11 +1,17 @@
 /// Metrics to be sent every second 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Metrics {
+    /// Packets sent
     pub sent_packets: usize,
+    /// Packets received
     pub received_packets: usize,
+    /// The amount of data in kilobytes sent
     pub sent_kbps: f32,
+    /// The amount of data in kilobytes received
     pub receive_kbps: f32,
+    /// The percentage (0-1) packets lost
     pub packet_loss: f32,
+    /// Round trip time
     pub rtt: f32
 }
 
@@ -86,8 +92,8 @@ impl MetricsHandler {
             sent_packets: sent_count,
             received_packets: receive_count,
             sent_kbps: if sent_count == 0 {0.0} else {self.current_frame.sent_kbps.iter().fold(0.0, |acc, x| acc + x)/sent_count as f32},
-            receive_kbps: if receive_count == 0 {0.0} else {self.current_frame.receive_kbps.iter().fold(0.0, |acc, x| acc + x)/sent_count as f32},
-            packet_loss: self.current_frame.packet_loss as f32/sent_count as f32,
+            receive_kbps: if receive_count == 0 {0.0} else {self.current_frame.receive_kbps.iter().fold(0.0, |acc, x| acc + x)/receive_count as f32},
+            packet_loss: if sent_count == 0 {0.0} else {self.current_frame.packet_loss as f32/sent_count as f32},
             rtt: 0.0,
         };
 
