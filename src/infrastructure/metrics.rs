@@ -1,6 +1,6 @@
-use std::cmp::min;
+use std::{cmp::min, ops::{Add, AddAssign}};
 
-const FACTOR: u32 = 15;
+const FACTOR: u32 = 2;
 /// Metrics to be sent every second 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Metrics {
@@ -28,6 +28,27 @@ impl Default for Metrics {
             packet_loss: 0.0,
             rtt: 0.0,
         }
+    }
+}
+
+impl Add for Metrics {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            sent_packets: self.sent_packets + rhs.sent_packets,
+            received_packets: self.received_packets + rhs.received_packets,
+            sent_kbps: self.sent_kbps + rhs.sent_kbps,
+            receive_kbps: self.receive_kbps + rhs.receive_kbps,
+            packet_loss: self.packet_loss + rhs.packet_loss,
+            rtt: self.rtt + rhs.rtt,
+        }
+    }
+}
+
+impl AddAssign for Metrics {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
     }
 }
 
