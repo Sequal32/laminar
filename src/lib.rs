@@ -24,6 +24,7 @@
 
 pub use self::config::Config;
 pub use self::error::{ErrorKind, Result};
+pub use self::infrastructure::Metrics;
 pub use self::net::{LinkConditioner, Socket, SocketEvent};
 pub use self::packet::{DeliveryGuarantee, OrderingGuarantee, Packet};
 #[cfg(feature = "tester")]

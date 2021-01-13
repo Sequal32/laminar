@@ -1,12 +1,12 @@
 /// Metrics to be sent every second 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Metrics {
-    sent_packets: usize,
-    received_packets: usize,
-    sent_kbps: f32,
-    receive_kbps: f32,
-    packet_loss: f32,
-    rtt: f32
+    pub sent_packets: usize,
+    pub received_packets: usize,
+    pub sent_kbps: f32,
+    pub receive_kbps: f32,
+    pub packet_loss: f32,
+    pub rtt: f32
 }
 
 impl Default for Metrics {
