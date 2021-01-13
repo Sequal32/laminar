@@ -25,7 +25,7 @@ impl CongestionHandler {
 
     /// Processes incoming sequence number.
     ///
-    /// This will calculate the RTT-time and smooth down the RTT-value to prevent uge RTT-spikes.
+    /// This will calculate the RTT-time and smooth down the RTT-value to prevent huge RTT-spikes.
     pub fn process_incoming(&mut self, incoming_seq: u16) {
         let congestion_data = self.congestion_data.get_mut(incoming_seq);
         self.rtt_measurer.calculate_rrt(congestion_data);
@@ -38,6 +38,11 @@ impl CongestionHandler {
     pub fn process_outgoing(&mut self, seq: u16, time: Instant) {
         self.congestion_data
             .insert(seq, CongestionData::new(seq, time));
+    }
+
+    /// Get the RTT from the underlying measurer
+    pub fn get_rtt(&self) -> f32 {
+        self.rtt_measurer.get_rtt()
     }
 }
 

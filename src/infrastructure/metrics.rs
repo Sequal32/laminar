@@ -1,3 +1,4 @@
+/// Metrics to be sent every second 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Metrics {
     sent_packets: usize,
@@ -21,6 +22,7 @@ impl Default for Metrics {
     }
 }
 
+/// A "frame" of metrics, where all the values in Vecs will be averaged into a Metrics struct
 struct MetricsArray {
     pub sent_kbps: Vec<f32>,
     pub receive_kbps: Vec<f32>,
@@ -71,14 +73,21 @@ impl MetricsHandler {
         self.current_frame.packet_loss += dropped_packets_count;
     }
 
+    pub fn record_rtt(&mut self, rtt: f32) {
+        self.current_frame.rtt.push(rtt);
+    }
+
     // Should be called every second
     pub fn calculate_output(&mut self) -> Metrics {
+        let sent_count = self.current_frame.sent_kbps.len();
+        let receive_count = self.current_frame.receive_kbps.len();
+
         let result = Metrics {
-            sent_packets: self.current_frame.sent_kbps.len(),
-            received_packets: self.current_frame.receive_kbps.len(),
-            sent_kbps: self.current_frame.sent_kbps.iter().fold(0.0, |acc, x| acc + x)/self.current_frame.sent_kbps.len() as f32,
-            receive_kbps: self.current_frame.receive_kbps.iter().fold(0.0, |acc, x| acc + x)/self.current_frame.sent_kbps.len() as f32,
-            packet_loss: self.current_frame.packet_loss as f32/self.current_frame.sent_kbps.len() as f32,
+            sent_packets: sent_count,
+            received_packets: receive_count,
+            sent_kbps: if sent_count == 0 {0.0} else {self.current_frame.sent_kbps.iter().fold(0.0, |acc, x| acc + x)/sent_count as f32},
+            receive_kbps: if receive_count == 0 {0.0} else {self.current_frame.receive_kbps.iter().fold(0.0, |acc, x| acc + x)/sent_count as f32},
+            packet_loss: self.current_frame.packet_loss as f32/sent_count as f32,
             rtt: 0.0,
         };
 
