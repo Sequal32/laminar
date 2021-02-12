@@ -85,7 +85,7 @@ impl MetricsHandler {
     }
 
     pub fn record_rtt(&mut self, rtt: f32) {
-        self.current_frame.rtt += rtt;
+        self.current_frame.rtt += rtt.abs(); // rtt can be negative for some reason
     }
 
     fn average(&self, new_value: f32, average: f32) -> f32 {
