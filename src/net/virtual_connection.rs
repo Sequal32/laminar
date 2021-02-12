@@ -356,6 +356,9 @@ impl VirtualConnection {
 
                     self.congestion_handler
                         .process_incoming(acked_header.sequence());
+                        // Record rtt for metrics
+                    self.metrics_handler.record_rtt(self.congestion_handler.get_rtt());
+                    
                     self.acknowledge_handler.process_incoming(
                         acked_header.sequence(),
                         acked_header.ack_seq(),
