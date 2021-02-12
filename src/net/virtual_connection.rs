@@ -328,7 +328,7 @@ impl VirtualConnection {
                         ) {
                             Ok(Some((payload, acked_header))) => {
                                 self.congestion_handler
-                                    .process_incoming(acked_header.sequence());
+                                    .process_incoming(acked_header.ack_seq());
                                 // Record rtt for metrics
                                 self.metrics_handler
                                     .record_rtt(self.congestion_handler.get_rtt());
@@ -357,7 +357,7 @@ impl VirtualConnection {
                     let acked_header = packet_reader.read_acknowledge_header()?;
 
                     self.congestion_handler
-                        .process_incoming(acked_header.sequence());
+                        .process_incoming(acked_header.ack_seq());
                     // Record rtt for metrics
                     self.metrics_handler
                         .record_rtt(self.congestion_handler.get_rtt());
