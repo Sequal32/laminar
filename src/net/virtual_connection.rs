@@ -7,7 +7,8 @@ use crate::{
     error::{ErrorKind, PacketErrorKind, Result},
     infrastructure::{
         arranging::{Arranging, ArrangingSystem, OrderingSystem, SequencingSystem},
-        AcknowledgmentHandler, CongestionHandler, Fragmentation, SentPacket, Metrics, MetricsHandler
+        AcknowledgmentHandler, CongestionHandler, Fragmentation, Metrics, MetricsHandler,
+        SentPacket,
     },
     net::constants::{
         ACKED_PACKET_HEADER, DEFAULT_ORDERING_STREAM, DEFAULT_SEQUENCING_STREAM,
@@ -261,7 +262,8 @@ impl VirtualConnection {
         time: Instant,
     ) -> Result<IncomingPackets> {
         self.last_heard = time;
-        self.metrics_handler.record_receive_info(received_data.len());
+        self.metrics_handler
+            .record_receive_info(received_data.len());
 
         let mut packet_reader = PacketReader::new(received_data);
 
@@ -276,7 +278,6 @@ impl VirtualConnection {
             // we already updated our `self.last_heard` time, nothing else to be done.
             return Ok(IncomingPackets::zero());
         }
-
 
         match header.delivery_guarantee() {
             DeliveryGuarantee::Unreliable => {
@@ -328,9 +329,10 @@ impl VirtualConnection {
                             Ok(Some((payload, acked_header))) => {
                                 self.congestion_handler
                                     .process_incoming(acked_header.sequence());
-                                     // Record rtt for metrics
-                                self.metrics_handler.record_rtt(self.congestion_handler.get_rtt());
-                                
+                                // Record rtt for metrics
+                                self.metrics_handler
+                                    .record_rtt(self.congestion_handler.get_rtt());
+
                                 self.acknowledge_handler.process_incoming(
                                     acked_header.sequence(),
                                     acked_header.ack_seq(),
@@ -356,9 +358,10 @@ impl VirtualConnection {
 
                     self.congestion_handler
                         .process_incoming(acked_header.sequence());
-                        // Record rtt for metrics
-                    self.metrics_handler.record_rtt(self.congestion_handler.get_rtt());
-                    
+                    // Record rtt for metrics
+                    self.metrics_handler
+                        .record_rtt(self.congestion_handler.get_rtt());
+
                     self.acknowledge_handler.process_incoming(
                         acked_header.sequence(),
                         acked_header.ack_seq(),

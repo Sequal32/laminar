@@ -1,7 +1,10 @@
-use std::{cmp::min, ops::{Add, AddAssign}};
+use std::{
+    cmp::min,
+    ops::{Add, AddAssign},
+};
 
 const FACTOR: u32 = 2;
-/// Metrics to be sent every second 
+/// Metrics to be sent every second
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Metrics {
     /// Packets sent
@@ -15,7 +18,7 @@ pub struct Metrics {
     /// The percentage (0-1) packets lost
     pub packet_loss: f32,
     /// Round trip time
-    pub rtt: f32
+    pub rtt: f32,
 }
 
 impl Default for Metrics {
@@ -55,7 +58,7 @@ impl AddAssign for Metrics {
 pub struct MetricsHandler {
     current_frame: Metrics,
     current_averages: Metrics,
-    counter: u32
+    counter: u32,
 }
 
 impl MetricsHandler {
@@ -63,17 +66,17 @@ impl MetricsHandler {
         Self {
             current_frame: Metrics::default(),
             current_averages: Metrics::default(),
-            counter: 0
+            counter: 0,
         }
     }
 
     pub fn record_sent_info(&mut self, sent_bytes: usize) {
-        self.current_frame.sent_kbps += sent_bytes as f32/1000.0;
+        self.current_frame.sent_kbps += sent_bytes as f32 / 1000.0;
         self.current_frame.sent_packets += 1.0;
     }
 
     pub fn record_receive_info(&mut self, receive_bytes: usize) {
-        self.current_frame.receive_kbps += receive_bytes as f32/1000.0;
+        self.current_frame.receive_kbps += receive_bytes as f32 / 1000.0;
         self.current_frame.received_packets += 1.0;
     }
 
@@ -93,11 +96,30 @@ impl MetricsHandler {
     pub fn calculate_output(&mut self) -> Metrics {
         self.counter += 1;
         self.current_averages = Metrics {
-            sent_packets: self.average(self.current_frame.sent_packets, self.current_averages.sent_packets),
-            received_packets: self.average(self.current_frame.received_packets, self.current_averages.received_packets),
-            sent_kbps: self.average(self.current_frame.sent_kbps, self.current_averages.sent_kbps),
-            receive_kbps: self.average(self.current_frame.receive_kbps, self.current_averages.receive_kbps),
-            packet_loss: self.average(if self.current_frame.sent_packets > 0.0 {self.current_frame.packet_loss/self.current_frame.sent_packets} else {0.0}, self.current_averages.packet_loss),
+            sent_packets: self.average(
+                self.current_frame.sent_packets,
+                self.current_averages.sent_packets,
+            ),
+            received_packets: self.average(
+                self.current_frame.received_packets,
+                self.current_averages.received_packets,
+            ),
+            sent_kbps: self.average(
+                self.current_frame.sent_kbps,
+                self.current_averages.sent_kbps,
+            ),
+            receive_kbps: self.average(
+                self.current_frame.receive_kbps,
+                self.current_averages.receive_kbps,
+            ),
+            packet_loss: self.average(
+                if self.current_frame.sent_packets > 0.0 {
+                    self.current_frame.packet_loss / self.current_frame.sent_packets
+                } else {
+                    0.0
+                },
+                self.current_averages.packet_loss,
+            ),
             rtt: self.average(self.current_frame.rtt, self.current_averages.rtt),
         };
 

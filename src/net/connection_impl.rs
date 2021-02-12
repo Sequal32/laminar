@@ -179,7 +179,10 @@ impl Connection for VirtualConnection {
         // send metrics if required
         if self.last_metric.elapsed().as_secs() >= 1 {
             let metrics = self.get_metrics();
-            messenger.send_event(&self.remote_address, SocketEvent::Metrics(self.remote_address.clone(), metrics));
+            messenger.send_event(
+                &self.remote_address,
+                SocketEvent::Metrics(self.remote_address.clone(), metrics),
+            );
             self.last_metric = Instant::now();
         }
     }
