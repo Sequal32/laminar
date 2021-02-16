@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use std::time::Instant;
 
-use log::error;
+use log::{error, warn};
 
 use crate::error::{ErrorKind, Result};
 use crate::packet::{DeliveryGuarantee, OutgoingPackets, Packet, PacketInfo};
@@ -61,8 +61,23 @@ impl Connection for VirtualConnection {
         messenger: &mut impl ConnectionMessenger<Self::ReceiveEvent>,
         time: Instant,
     ) -> bool {
-        let should_drop = self.packets_in_flight() > messenger.config().max_packets_in_flight
-            || self.last_heard(time) >= messenger.config().idle_connection_timeout;
+        let packets_over = self.packets_in_flight() > messenger.config().max_packets_in_flight;
+        let timed_out = self.last_heard(time) >= messenger.config().idle_connection_timeout;
+
+        if packets_over {
+            warn!(
+                "Dropping connection because too many packets were unacknowledged ({}).",
+                messenger.config().max_packets_in_flight
+            );
+        } else if timed_out {
+            warn!(
+                "Dropping connection because there were no packets received for {} seconds.",
+                messenger.config().idle_connection_timeout.as_secs()
+            );
+        }
+
+        let should_drop = packets_over || timed_out;
+
         if should_drop {
             messenger.send_event(
                 &self.remote_address,
